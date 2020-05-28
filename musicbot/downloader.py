@@ -34,6 +34,7 @@ youtube_dl.utils.bug_reports_message = lambda: ''
 
 '''
 
+
 class Downloader:
     def __init__(self, download_folder=None):
         self.thread_pool = ThreadPoolExecutor(max_workers=2)
@@ -44,16 +45,22 @@ class Downloader:
 
         if download_folder:
             otmpl = self.unsafe_ytdl.params['outtmpl']
-            self.unsafe_ytdl.params['outtmpl'] = os.path.join(download_folder, otmpl)
+            self.unsafe_ytdl.params['outtmpl'] = os.path.join(
+                download_folder, otmpl)
             # print("setting template to " + os.path.join(download_folder, otmpl))
 
             otmpl = self.safe_ytdl.params['outtmpl']
-            self.safe_ytdl.params['outtmpl'] = os.path.join(download_folder, otmpl)
-
+            self.safe_ytdl.params['outtmpl'] = os.path.join(
+                download_folder, otmpl)
 
     @property
     def ytdl(self):
         return self.safe_ytdl
+
+    def set_ip(self, ip):
+        self.unsafe_ytdl.params['source_address'] = ip
+        self.safe_ytdl.params['source_address'] = ip
+        log.info("Downloader: IP changed to '{}'".format(ip))
 
     async def extract_info(self, loop, *args, on_error=None, retry_on_error=False, **kwargs):
         """
