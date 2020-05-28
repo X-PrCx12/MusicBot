@@ -856,6 +856,7 @@ class MusicBot(discord.Client):
 
 #######################################################################################################################
 
+
     async def safe_send_message(self, dest, content, **kwargs):
         tts = kwargs.pop('tts', False)
         quiet = kwargs.pop('quiet', False)
@@ -1208,6 +1209,14 @@ class MusicBot(discord.Client):
                      icon_url=self.user.avatar_url)
         return e
 
+    def update_downloader_ip(self):
+        if len(self.config.downloader_ips) == 0:
+            return
+        ip = random.choice(self.config.downloader_ips)
+        self.unsafe_ytdl.params['source_address'] = ip
+        self.safe_ytdl.params['source_address'] = ip
+        log.info("Downloader IP changed to '{}'".format(ip))
+
     async def cmd_resetplaylist(self, player, channel):
         """
         Usage:
@@ -1543,6 +1552,14 @@ class MusicBot(discord.Client):
                         # it's probably not actually an extractor
                         song_url = song_url.replace(':', '')
                         info, info_process, info_process_err = await get_info(song_url)
+                    elif "HTTPError 429" in e.__str__():
+                        if len(self.config.downloader_ips) > 1:
+                            self.update_downloader_ip()
+                            raise exceptions.CommandError(self.str.get(
+                                'cmd-play-ratelimit-ips', "Could not download the track, please try again."), expire_in=30)
+                        else:
+                            raise exceptions.CommandError(self.str.get(
+                                'cmd-play-ratelimit', "Could not download the track, 429 ratelimit."), expire_in=30)
                     else:
                         raise exceptions.CommandError(e, expire_in=30)
 

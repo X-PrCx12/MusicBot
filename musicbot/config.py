@@ -304,15 +304,12 @@ class Config:
                     ip_list.remove(ip)
             ip_list = set(ip_list)
             if len(ip_list) == 0:
-                log.warning("Invalid DownloaderIPs option, falling back to {}".format(
-                    ConfigDefaults.downloader_ips))
+                log.warning("Invalid DownloaderIPs option, falling back.")
                 self.downloader_ips = ConfigDefaults.downloader_ips
             else:
                 log.debug("Using {} IPs for downloader".format(len(ip_list)))
                 self.downloader_ips = ip_list
         else:
-            log.debug("Using {} for downloader".format(
-                ConfigDefaults.downloader_ips))
             self.downloader_ips = ConfigDefaults.downloader_ips
 
     def create_empty_file_ifnoexist(self, path):
@@ -463,7 +460,7 @@ class ConfigDefaults:
     leavenonowners = False
     usealias = True
     footer_text = 'Team-JSB/MusicBot ({})'.format(BOTVERSION)
-    downloader_ips = {"0.0.0.0"}
+    downloader_ips = set()
 
     options_file = 'config/options.ini'
     blacklist_file = 'config/blacklist.txt'
