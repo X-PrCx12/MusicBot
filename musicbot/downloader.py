@@ -57,11 +57,6 @@ class Downloader:
     def ytdl(self):
         return self.safe_ytdl
 
-    def set_ip(self, ip):
-        self.unsafe_ytdl.params['source_address'] = ip
-        self.safe_ytdl.params['source_address'] = ip
-        log.info("Downloader: IP changed to '{}'".format(ip))
-
     async def extract_info(self, loop, *args, on_error=None, retry_on_error=False, **kwargs):
         """
             Runs ytdl.extract_info within the threadpool. Returns a future that will fire when it's done.

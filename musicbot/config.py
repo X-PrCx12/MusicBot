@@ -4,6 +4,7 @@ import codecs
 import shutil
 import logging
 import configparser
+import ipaddress
 
 from .exceptions import HelpfulError
 from .constants import VERSION as BOTVERSION
@@ -119,6 +120,8 @@ class Config:
             'MusicBot', 'UseAlias', fallback=ConfigDefaults.usealias)
         self.footer_text = config.get(
             'MusicBot', 'CustomEmbedFooter', fallback=ConfigDefaults.footer_text)
+        self.downloader_ips = config.get(
+            'MusicBot', 'DownloaderIPs', fallback=ConfigDefaults.downloader_ips)
 
         self.debug_level = config.get(
             'MusicBot', 'DebugLevel', fallback=ConfigDefaults.debug_level)
@@ -290,13 +293,32 @@ class Config:
         if not self.footer_text:
             self.footer_text = ConfigDefaults.footer_text
 
+        if len(self.downloader_ips) > 1:
+            ip_list = self.downloader_ips.split()
+            for ip in ip_list:
+                try:
+                    ipaddress.ip_address(ip)
+                except:
+                    log.warning(
+                        "Removing '{}' from the IP list, invalid IP.".format(ip))
+                    ip_list.remove(ip)
+            ip_list = set(ip_list)
+            if len(ip_list) == 0:
+                log.warning("Invalid DownloaderIPs option, falling back to {}".format(
+                    ConfigDefaults.downloader_ips))
+                self.downloader_ips = ConfigDefaults.downloader_ips
+            else:
+                log.debug("Using {} IPs for downloader".format(len(ip_list)))
+                self.downloader_ips = ip_list
+        else:
+            log.debug("Using {} for downloader".format(
+                ConfigDefaults.downloader_ips))
+            self.downloader_ips = ConfigDefaults.downloader_ips
+
     def create_empty_file_ifnoexist(self, path):
         if not os.path.isfile(path):
             open(path, 'a').close()
             log.warning('Creating %s' % path)
-
-    # TODO: Add save function for future editing of options with commands
-    #       Maybe add warnings about fields missing from the config file
 
     async def async_validate(self, bot):
         log.debug("Validating options...")
@@ -441,6 +463,7 @@ class ConfigDefaults:
     leavenonowners = False
     usealias = True
     footer_text = 'Team-JSB/MusicBot ({})'.format(BOTVERSION)
+    downloader_ips = {"0.0.0.0"}
 
     options_file = 'config/options.ini'
     blacklist_file = 'config/blacklist.txt'
