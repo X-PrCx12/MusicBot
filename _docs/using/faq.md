@@ -4,6 +4,17 @@ category: Using the bot
 order: 7
 ---
 
+#### How do I migrate to the Team-JSB branch of MusicBot?
+
+The process of doing this is very easy, surprisingly! The commands listed below will set the git repo of the bot to the Team-JSB branch, and pull the latest version.
+
+```bash
+git remote set-url origin https://github.com/Team-JSB/MusicBot.git
+git pull
+```
+
+Once this is done, you can run the update script to ensure your dependencies are up to date, and launch the bot as normal!
+
 #### How do I get an ID?
 
 <img class="doc-img" src="{{ site.baseurl }}/images/ids.gif" alt="IDs" style="width: 350px; float: right;"/>
@@ -12,7 +23,7 @@ The bot has a `!listids` command that you can use to obtain IDs, or you can turn
 
 #### What can the bot play?
 
-The bot was developed to support YouTube and SoundCloud URLs, but it can theoretically support most of what youtube-dl [supports](https://rg3.github.io/youtube-dl/supportedsites.html). If there is a site that isn't supported by the bot but is by youtube-dl, create an [issue](https://github.com/Just-Some-Bots/MusicBot/issues/new) and let us know you want support added for it. The bot supports also streams like Twitch and internet radio (provided you give it a direct URL), however it is an experimental feature. To do this, use the `!stream` command instead of `!play`.
+The bot was developed to support YouTube and SoundCloud URLs, but it can theoretically support most of what youtube-dl [supports](https://rg3.github.io/youtube-dl/supportedsites.html). If there is a site that isn't supported by the bot but is by youtube-dl, create an [issue](https://github.com/Team-JSB/MusicBot/issues/new) and let us know you want support added for it. The bot supports also streams like Twitch and internet radio (provided you give it a direct URL), however it is an experimental feature. To do this, use the `!stream` command instead of `!play`.
 
 Currently, the bot can't play music that is saved on your computer locally, though it is a [planned feature](https://github.com/Just-Some-Bots/MusicBot/issues/168).
 

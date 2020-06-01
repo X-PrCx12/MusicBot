@@ -4,8 +4,8 @@ category: Using the bot
 order: 4
 ---
 
-[![GitHub stars](https://img.shields.io/github/stars/Just-Some-Bots/MusicBot.svg)](https://github.com/Just-Some-Bots/MusicBot/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/Just-Some-Bots/MusicBot.svg)](https://github.com/Just-Some-Bots/MusicBot/network)
+[![GitHub stars](https://img.shields.io/github/stars/Team-JSB/MusicBot.svg)](https://github.com/Team-JSB/MusicBot/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/Team-JSB/MusicBot.svg)](https://github.com/Team-JSB/MusicBot/network)
 [![Python version](https://img.shields.io/badge/python-3.5%2C%203.6%2C%203.7-blue.svg)](https://python.org)
 
 > MucicBot version 1.9.8 requires Python 3.5.3 or higher. If you are updating the MusicBot with version below than 1.9.8, reinstall Python with the following version.
@@ -40,5 +40,5 @@ Alternatively, discard your local changes by running `git reset --hard`.
 #### fatal: Not a git repository
 This indicates that you have not installed the bot using Git. To be able to update, you need to install the bot using Git by following the guides on this site.
 
-#### fatal: unable to access 'https://github.com/Just-Some-Bots/MusicBot.git' SSL certificate problem: self signed certificate in certificate chain
+#### fatal: unable to access 'https://github.com/Team-JSB/MusicBot.git' SSL certificate problem: self signed certificate in certificate chain
 Try disabling your antivirus. Some antivirus software (such as Kaspersky Internet Security) is known to interfere with git.
