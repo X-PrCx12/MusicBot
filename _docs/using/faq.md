@@ -12,7 +12,7 @@ The bot has a `!listids` command that you can use to obtain IDs, or you can turn
 
 #### What can the bot play?
 
-The bot was developed to support YouTube and SoundCloud URLs, but it can theoretically support most of what youtube-dl [supports](https://rg3.github.io/youtube-dl/supportedsites.html). If there is a site that isn't supported by the bot but is by youtube-dl, create an [issue](https://github.com/Just-Some-Bots/MusicBot/issues/new) and let us know you want support added for it. The bot supports also streams like Twitch and internet radio (provided you give it a direct URL), however it is an experimental feature. To do this, use the `!stream` command instead of `!play`.
+The bot was developed to support YouTube and SoundCloud URLs, but it can theoretically support most of what youtube-dl [supports](https://rg3.github.io/youtube-dl/supportedsites.html). If there is a site that isn't supported by the bot but is by youtube-dl, create an [issue](https://github.com/Team-JSB/MusicBot/issues/new) and let us know you want support added for it. The bot supports also streams like Twitch and internet radio (provided you give it a direct URL), however it is an experimental feature. To do this, use the `!stream` command instead of `!play`.
 
 Currently, the bot can't play music that is saved on your computer locally, though it is a [planned feature](https://github.com/Just-Some-Bots/MusicBot/issues/168).
 
@@ -37,3 +37,14 @@ It will look something like this:
 You can then change the values (after the colon on each line) to whatever you like. Make sure that you preserve variables that look like `{0}` and `%s` to ensure the bot can automatically insert things there.
 
 Finally, ensure that your JSON is formatted correctly and valid, by pasting it into a tool like [JSONLint](https://jsonlint.com/), and then change the option `i18nFile` in your config file to equal `config/i18n/whatever.json`. Launch the bot, and off you go! If your file can't be loaded, the bot will try to fallback to the default (`en.json`). If it can't do that, it will throw an error.
+
+#### How do I migrate to the Team-JSB branch of MusicBot?
+
+The process of doing this is very easy, surprisingly! The commands listed below will set the git repo of the bot to the Team-JSB branch, and pull the latest version.
+
+```bash
+git remote set-url origin https://github.com/Team-JSB/MusicBot.git
+git pull
+```
+
+Once this is done, you can run the update script to ensure your dependencies are up to date, and launch the bot as normal!
