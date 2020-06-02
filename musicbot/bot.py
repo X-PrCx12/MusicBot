@@ -139,7 +139,8 @@ class ModuBot(Bot):
         self.spotify = None
         if self.config._spotify:
             try:
-                self.spotify = Spotify(self.config.spotify_clientid, self.config.spotify_clientsecret, aiosession=self.aiosession, loop=self.loop)
+                self.spotify = Spotify(
+                    self.config.spotify_clientid, self.config.spotify_clientsecret, aiosession=self.aiosession, loop=self.loop)
                 if not self.spotify.token:
                     self.log.warning('Spotify did not provide us with a token. Disabling.')
                     self.config._spotify = False
@@ -151,8 +152,10 @@ class ModuBot(Bot):
                 time.sleep(5)  # make sure they see the problem
         else:
             try:
-                log.warning('The config did not have Spotify app credentials, attempting to use guest mode.')
-                self.spotify = Spotify(None, None, aiosession=self.aiosession, loop=self.loop)
+                log.warning(
+                    'The config did not have Spotify app credentials, attempting to use guest mode.')
+                self.spotify = Spotify(
+                    None, None, aiosession=self.aiosession, loop=self.loop)
                 if not self.spotify.token:
                     self.log.warning('Spotify did not provide us with a token. Disabling.')
                     self.config._spotify = False
@@ -780,7 +783,8 @@ class ModuBot(Bot):
             if self.user.bot:
                 activeplayers = sum(1 for g in get_guild_list(self) if g._player and g._player.state == PlayerState.PLAYING)
                 if activeplayers > 1:
-                    game = discord.Game(type=0, name="music on %s guilds" % activeplayers)
+                    game = discord.Game(
+                        type=0, name="music on %s guilds" % activeplayers)
                     entry = None
 
             if entry:
@@ -789,7 +793,8 @@ class ModuBot(Bot):
                 name = u'{}{}'.format(prefix, entry.title)[:128]
                 game = discord.Game(type=0, name=name)
         else:
-            game = discord.Game(type=0, name=self.config.status_message.strip()[:128])
+            game = discord.Game(
+                type=0, name=self.config.status_message.strip()[:128])
 
         async with self._aiolocks['presence']:
             await self.change_presence(activity = game)

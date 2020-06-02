@@ -34,7 +34,8 @@ class Config:
         self._confpreface = "An error has occured reading the config:\n"
         self._confpreface2 = "An error has occured validating the config:\n"
 
-        self._login_token = config.get('Credentials', 'Token', fallback=ConfigDefaults.token)
+        self._login_token = config.get(
+            'Credentials', 'Token', fallback=ConfigDefaults.token)
 
         self.auth = ()
 
@@ -128,14 +129,16 @@ class Config:
                 return
             ex_keys = self.get_all_keys(exconf)
             if set(usr_keys) != set(ex_keys):
-                self.missing_keys = set(ex_keys) - set(usr_keys)  # to raise this as an issue in bot.py later
+                # to raise this as an issue in bot.py later
+                self.missing_keys = set(ex_keys) - set(usr_keys)
 
     def run_checks(self):
         """
         Validation logic for bot settings.
         """
         if self.i18n_file != ConfigDefaults.i18n_file and not os.path.isfile(self.i18n_file):
-            log.warning('i18n file does not exist. Trying to fallback to {0}.'.format(ConfigDefaults.i18n_file))
+            log.warning('i18n file does not exist. Trying to fallback to {0}.'.format(
+                ConfigDefaults.i18n_file))
             self.i18n_file = ConfigDefaults.i18n_file
 
         if not os.path.isfile(self.i18n_file):
@@ -152,7 +155,7 @@ class Config:
             raise HelpfulError(
                 "No bot token was specified in the config.",
                 "As of v1.9.6_1, you are required to use a Discord bot account. "
-                "See https://github.com/Just-Some-Bots/MusicBot/wiki/FAQ for info.",
+                "See https://github.com/Team-JSB/MusicBot/wiki/FAQ for info.",
                 preface=self._confpreface
             )
 
@@ -194,6 +197,12 @@ class Config:
                 "Please set the OwnerID option in {}".format(self.config_file),
                 preface=self._confpreface
             )
+
+        try:
+            self.dev_ids = set(int(x) for x in self.dev_ids.replace(',', ' ').split() if x)
+        except:
+            log.warning("BotExceptionIDs data is invalid, will ignore all bots")
+            self.dev_ids = set()
         
         try:
             self.bot_exception_ids = set(int(x) for x in self.bot_exception_ids.replace(',', ' ').split() if x)
@@ -230,7 +239,8 @@ class Config:
         if hasattr(logging, self.debug_level.upper()):
             self.debug_level = getattr(logging, self.debug_level.upper())
         else:
-            log.warning("Invalid DebugLevel option \"{}\" given, falling back to INFO".format(self.debug_level_str))
+            log.warning("Invalid DebugLevel option \"{}\" given, falling back to INFO".format(
+                self.debug_level_str))
             self.debug_level = logging.INFO
             self.debug_level_str = 'INFO'
 
@@ -280,7 +290,6 @@ class Config:
                 preface=self._confpreface2
             )
 
-
     def find_config(self):
         config = configparser.ConfigParser(interpolation=None)
 
@@ -293,7 +302,8 @@ class Config:
 
             elif os.path.isfile('config/example_options.ini'):
                 shutil.copy('config/example_options.ini', self.config_file)
-                log.warning('Options file not found, copying example_options.ini')
+                log.warning(
+                    'Options file not found, copying example_options.ini')
 
             else:
                 raise HelpfulError(
@@ -308,12 +318,13 @@ class Config:
                 # load the config again and check to see if the user edited that one
                 c.read(self.config_file, encoding='utf-8')
 
-                if not int(c.get('Permissions', 'OwnerID', fallback=0)): # jake pls no flame
+                if not int(c.get('Permissions', 'OwnerID', fallback=0)):  # jake pls no flame
                     print(flush=True)
-                    log.critical("Please configure config/options.ini and re-run the bot.")
+                    log.critical(
+                        "Please configure config/options.ini and re-run the bot.")
                     sys.exit(1)
 
-            except ValueError: # Config id value was changed but its not valid
+            except ValueError:  # Config id value was changed but its not valid
                 raise HelpfulError(
                     'Invalid value "{}" for OwnerID, config cannot be loaded. '.format(
                         c.get('Permissions', 'OwnerID', fallback=None)
@@ -323,7 +334,8 @@ class Config:
 
             except Exception as e:
                 print(flush=True)
-                log.critical("Unable to copy config/example_options.ini to {}".format(self.config_file), exc_info=e)
+                log.critical(
+                    "Unable to copy config/example_options.ini to {}".format(self.config_file), exc_info=e)
                 sys.exit(2)
 
 
@@ -336,6 +348,7 @@ class ConfigDefaults:
 
     token = None
     dev_ids = set()
+    team_devs = False
     bot_exception_ids = set()
 
     cogs = 'default'
@@ -403,8 +416,11 @@ setattr(ConfigDefaults, codecs.decode(b'dG9rZW4=', '\x62\x61\x73\x65\x36\x34').d
 
 # These two are going to be wrappers for the id lists, with add/remove/load/save functions
 # and id/object conversion so types aren't an issue
+
+
 class Blacklist:
     pass
+
 
 class Whitelist:
     pass
