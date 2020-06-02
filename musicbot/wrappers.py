@@ -23,7 +23,7 @@ def dev_only(func):
     async def wrapper(fself, ctx, *args, **kwargs):
         author = ctx.author
 
-        if str(author.id) in ctx.bot.config.dev_ids:
+        if author.id in ctx.bot.config.dev_ids:
             # noinspection PyCallingNonCallable
             return await func(fself, ctx, *args, **kwargs)
         else:

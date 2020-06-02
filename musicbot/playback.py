@@ -622,7 +622,11 @@ class Player(AsyncEventEmitter, Serializable):
                     for task in self._entry_finished_tasks[entry]:
                         await task
                     del self._entry_finished_tasks[entry]
-                ensure_future(self._play())
+
+                if error:
+                    ensure_future(self._pause())
+                else:
+                    ensure_future(self._play())
 
             future = run_coroutine_threadsafe(_async_playback_finished(), self._guild._bot.loop)
             future.result()
@@ -731,8 +735,8 @@ class Player(AsyncEventEmitter, Serializable):
             if self.state != PlayerState.PAUSE:
                 if self.voice:
                     self.voice.pause()
-                    self.state = PlayerState.PAUSE
-                    await self.emit('pause', player=self, entry=self._current)
+                self.state = PlayerState.PAUSE
+                await self.emit('pause', player=self, entry=self._current)
 
     async def pause(self):
         with self._lock['pause']:

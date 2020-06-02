@@ -172,7 +172,7 @@ class Player_Cog(ExportableMixin, InjectableMixin, Cog):
         if 'channel_id' in entry._metadata:
             await messagemanager.safe_send_message(
                 guild.guild.get_channel(entry._metadata['channel_id']),
-                "```\nError from FFmpeg:\n{}\n```".format(ex)
+                "```\nError while playing:\n{}\n```".format(ex)
             )
         else:
             self.bot.log.exception("Player error", exc_info=ex)
