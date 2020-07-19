@@ -283,7 +283,7 @@ class Player_Cog(ExportableMixin, InjectableMixin, Cog):
                 self.player[guild] = self.apply_player_hooks(Player.from_json(playerdata, guild), guild)
         except Exception as e:
             self.bot.log.exception('cannot deserialize queue, using default one')
-            self.bot.log.exception(e)
+            self.bot.log.debug(e)
             self.player[guild] = self.apply_player_hooks(Player(guild), guild)
 
         channel = None
@@ -348,6 +348,38 @@ class Player_Cog(ExportableMixin, InjectableMixin, Cog):
     @export_func
     def get_playlist(self, guild):
         return self.player[guild].get_playlist()
+
+    @command()
+    async def disconnect(self, ctx):
+        """
+        Usage:
+            {command_prefix}disconnect
+        
+        Forces the bot leave the current voice channel.
+        """
+        await self.player[guild].voice.set_voice_channel(None)
+        await messagemanager.safe_send_normal(ctx, ctx, "Disconnected from `{0.name}`".format(ctx.guild), expire_in=20)
+        return
+
+    @command()
+    async def summon(self, ctx):
+        """
+        Usage:
+            {command_prefix}summon
+
+        Call the bot to the summoner's voice channel.
+        """
+
+        if not ctx.author.voice:
+            raise exceptions.CommandError(ctx.bot.str.get('cmd-summon-novc', 'You are not connected to voice. Try joining a voice channel!'))
+
+        await self.player[guild].set_voice_channel(ctx.author.voice.channel)
+        # TODO: check if autoplay
+
+        ctx.bot.log.info("Joining {0.guild.name}/{0.name}".format(ctx.author.voice.channel))
+
+        await messagemanager.safe_send_normal(ctx, ctx, ctx.bot.str.get('cmd-summon-reply', 'Connected to `{0.name}`').format(ctx.author.voice.channel))
+
 
     @command()
     async def np(self, ctx):

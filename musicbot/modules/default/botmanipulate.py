@@ -17,18 +17,6 @@ from ...wrappers import owner_only
 from ... import messagemanager
 
 class BotManagement(InjectableMixin, Cog):
-    @command()
-    async def disconnect(self, ctx):
-        """
-        Usage:
-            {command_prefix}disconnect
-        
-        Forces the bot leave the current voice channel.
-        """
-        await get_guild(ctx.bot, ctx.guild).player.set_voice_channel(None)
-        await messagemanager.safe_send_normal(ctx, ctx, "Disconnected from `{0.name}`".format(ctx.guild), expire_in=20)
-        return
-
     async def _restart(self, ctx):
         await messagemanager.safe_send_normal(ctx, ctx, "\N{WAVING HAND SIGN} Restarting. If you have updated your bot "
             "or its dependencies, you need to restart the bot properly, rather than using this command.")
@@ -214,26 +202,6 @@ class BotManagement(InjectableMixin, Cog):
             return
         else:
             raise exceptions.CommandError(ctx.bot.str.get('cmd-option-invalid-param' ,'The parameters provided were invalid.'))
-
-    @command()
-    async def summon(self, ctx):
-        """
-        Usage:
-            {command_prefix}summon
-
-        Call the bot to the summoner's voice channel.
-        """
-
-        if not ctx.author.voice:
-            raise exceptions.CommandError(ctx.bot.str.get('cmd-summon-novc', 'You are not connected to voice. Try joining a voice channel!'))
-
-        guild = get_guild(ctx.bot, ctx.guild)
-        await guild.player.set_voice_channel(ctx.author.voice.channel)
-        # TODO: check if autoplay
-
-        ctx.bot.log.info("Joining {0.guild.name}/{0.name}".format(ctx.author.voice.channel))
-
-        await messagemanager.safe_send_normal(ctx, ctx, ctx.bot.str.get('cmd-summon-reply', 'Connected to `{0.name}`').format(ctx.author.voice.channel))
 
     @command()
     @owner_only

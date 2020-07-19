@@ -48,7 +48,7 @@ class SmartVC:
         self._connected_client = await new_channel.connect()
         self._connected_voice = new_channel
 
-    async def set_voice_channel(self, voice_channel: VoiceChannel):
+    async def set_voice_channel(self, voice_channel: Optional[VoiceChannel]):
         with self._lock['change_voice']:
             if voice_channel:
                 if self._connected_voice:
