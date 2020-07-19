@@ -152,7 +152,7 @@ class ModuBot(Bot):
                 time.sleep(5)  # make sure they see the problem
         else:
             try:
-                log.warning(
+                self.log.warning(
                     'The config did not have Spotify app credentials, attempting to use guest mode.')
                 self.spotify = Spotify(
                     None, None, aiosession=self.aiosession, loop=self.loop)
@@ -811,11 +811,11 @@ class ModuBot(Bot):
         '''
         shorthand for `self.crossmodule.async_call_object`
         '''
-        return await self._objs[name](*args, **kwargs)
+        return await self.crossmodule._objs[name](*args, **kwargs)
 
     def call(self, name, *args, **kwargs):
         '''
         shorthand for `self.crossmodule.call_object`
         '''
-        return self._objs[name](*args, **kwargs)
+        return self.crossmodule._objs[name](*args, **kwargs)
         
