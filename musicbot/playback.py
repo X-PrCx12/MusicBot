@@ -768,8 +768,8 @@ class Player(AsyncEventEmitter, Serializable):
         entry = self.get_current_entry()
         with self._lock['skip']:
             with self._lock['player']:
-                if self.state == PlayerState.PAUSE:
-                    await self._play_safe(partial(ensure_future, self._pause()))
+                if entry and self.state == PlayerState.PAUSE:
+                    self._play_safe(partial(ensure_future, self._pause()))
                     _entry_cleanup(entry, self._guild._bot)
                     return
 
@@ -837,9 +837,9 @@ class Player(AsyncEventEmitter, Serializable):
             return estimated_time
 
     async def estimate_time_until_entry(self, entry):
-        with self._aiolocks['playlist']:
+        with self._lock['playlist']:
             future = None
-            with self._aiolocks['player']:
+            with self._lock['player']:
                 if self.state == PlayerState.DOWNLOADING:
                     self._guild._bot.log.debug('scheduling estimate time after current entry is playing')
                     future = Future()

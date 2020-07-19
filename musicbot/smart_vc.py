@@ -5,7 +5,7 @@ from typing import Optional, DefaultDict, Callable, Any
 
 from . import exceptions
 
-def _check_perm_connect(self, voice_channel: VoiceChannel):
+def _check_perm_connect(voice_channel: VoiceChannel):
     perms = voice_channel.permissions_for(voice_channel.guild.me)
     if not perms.connect:
         raise exceptions.VoiceConnectionError('Cannot join channel, no permission to connect.')
@@ -32,7 +32,7 @@ class SmartVC:
     async def _move_channel(self, new_channel: VoiceChannel):
         if self._connected_voice == new_channel:
             raise exceptions.VoiceConnectionError('Already connected to the voice channel.')
-        self._check_perm_connect(new_channel)
+        _check_perm_connect(new_channel)
         await self._connected_client.move_to(new_channel)
         self._connected_voice = new_channel
 
@@ -44,7 +44,7 @@ class SmartVC:
         self._connected_client = None
 
     async def _connect_channel(self, new_channel: VoiceChannel):
-        self._check_perm_connect(new_channel)
+        _check_perm_connect(new_channel)
         self._connected_client = await new_channel.connect()
         self._connected_voice = new_channel
 

@@ -25,6 +25,7 @@ from ... import messagemanager
 from ...smart_guild import SmartGuild, get_guild
 from ...playback import PlayerState, Playlist, Player
 from ...ytdldownloader import get_stream_entry, get_entry, get_local_entry, get_unprocessed_entry
+from ...exceptions import VoiceConnectionError
 
 log = logging.getLogger(__name__)
 
@@ -109,18 +110,16 @@ class QueueManagement(Cog):
 
         permissions = ctx.bot.permissions.for_user(ctx.author)
 
-        try:
-            player = self.player[guild]
-        except Exception as e:
+        if not self.player[guild].voice.voice_channel():
             if permissions.summonplay:
-                await ctx.bot.cogs['BotManagement'].summon.callback(ctx.bot.cogs['BotManagement'], ctx)
+                await ctx.bot.cogs['Player_Cog'].summon.callback(ctx.bot.cogs['Player_Cog'], ctx)
                 player = self.player[guild]
             else:
-                raise e
+                raise VoiceConnectionError('bot is not connected to voice!')
 
         song_url = song_url.strip('<>')
 
-        count, entry_iter = self.entrybuilders.get_entry_from_query(song_url)
+        count, entry_iter = await self.entrybuilders.get_entry_from_query(ctx, song_url)
 
         async with self._aiolocks['play_{}'.format(ctx.author.id)]:
             async with ctx.typing():
@@ -279,7 +278,7 @@ class QueueManagement(Cog):
             player = self.player[guild]
         except Exception as e:
             if permissions.summonplay:
-                await ctx.bot.cogs['BotManagement'].summon.callback(ctx.bot.cogs['BotManagement'], ctx)
+                await ctx.bot.cogs['Player_Cog'].summon.callback(ctx.bot.cogs['Player_Cog'], ctx)
                 player = self.player[guild]
             else:
                 raise e
@@ -344,7 +343,7 @@ class QueueManagement(Cog):
             player = self.player[guild]
         except Exception as e:
             if permissions.summonplay:
-                await ctx.bot.cogs['BotManagement'].summon.callback(ctx.bot.cogs['BotManagement'], ctx)
+                await ctx.bot.cogs['Player_Cog'].summon.callback(ctx.bot.cogs['Player_Cog'], ctx)
                 player = self.player[guild]
             else:
                 raise e

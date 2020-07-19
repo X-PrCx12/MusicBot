@@ -674,6 +674,7 @@ class ModuBot(Bot):
         self.thread = threading.currentThread()
         self.log.debug('running bot on thread {}'.format(threading.get_ident()))
         self.looplock.acquire()
+        self.log.debug("acquired bot's lock")
         
         def exchdlr(loop, excctx):
             exception = excctx.get('exception')
@@ -685,7 +686,7 @@ class ModuBot(Bot):
 
         self.loop.set_exception_handler(exchdlr)
         try:
-            self.loop.create_task(self.start(self.config._login_token))
+            self.loop.run_until_complete(self.start(self.config._login_token))
         except discord.errors.LoginFailure:
             # Add if token, else
             raise exceptions.HelpfulError(
@@ -693,8 +694,6 @@ class ModuBot(Bot):
                 "Fix your token in the options file.  "
                 "Remember that each field should be on their own line."
             )  #     ^^^^ In theory self.config.auth should never have no items
-        
-        self.loop.run_forever()
 
     async def close(self):
         guilds = get_guild_list(self)
@@ -709,7 +708,11 @@ class ModuBot(Bot):
     def stop_loopstopped(self):
         self.log.debug('on thread {}'.format(threading.get_ident()))
         self.log.info('logging out (loopstopped)..')
-        self.loop.run_until_complete(self.logout())
+        try:
+            self.loop.run_until_complete(self.logout())
+        except Exception as e:
+            self.log.exception('error logging out, traceback below')
+            self.log.exception(e)
 
     def stop_looprunning(self):
         async def _stop():
@@ -720,7 +723,10 @@ class ModuBot(Bot):
         self.log.debug('bot\'s thread status: {}'.format(self.thread.is_alive()))
         self.log.info('logging out (looprunning)..')
         future = asyncio.run_coroutine_threadsafe(self.logout(), self.loop)
-        future.result()
+        try:
+            future.result()
+        except Exception as e:
+            self.log.exception('error logging out, traceback below')
         self.log.debug('stopping loop...')
         future = asyncio.run_coroutine_threadsafe(_stop(), self.loop)
         self.looplock.acquire()
@@ -739,7 +745,7 @@ class ModuBot(Bot):
             self.log.debug('----------[ BEGIN CANCELLED ]----------')
             try:
                 await gathered
-            except (Exception, asyncio.exceptions.CancelledError):
+            except Exception:
                 self.log.debug(traceback.format_exc())
             self.log.debug('----------[  END CANCELLED  ]----------')
         self.loop.run_until_complete(await_gathered())
@@ -776,12 +782,12 @@ class ModuBot(Bot):
             await self.change_presence(activity = activity, status = status)
             self._presence = (activity, status)
 
-    async def update_now_playing_status(self, entry=None, is_paused=False):
+    async def update_now_playing_status(self, players, entry=None, is_paused=False):
         game = None
 
         if not self.config.status_message:
             if self.user.bot:
-                activeplayers = sum(1 for g in get_guild_list(self) if g._player and g._player.state == PlayerState.PLAYING)
+                activeplayers = sum(1 for p in players if p.state == PlayerState.PLAYING)
                 if activeplayers > 1:
                     game = discord.Game(
                         type=0, name="music on %s guilds" % activeplayers)

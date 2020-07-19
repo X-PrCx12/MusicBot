@@ -40,7 +40,7 @@ class Player_Cog(ExportableMixin, InjectableMixin, Cog):
         """
         Serialize the current player for a server's player to json.
         """
-        dir = self._save_dir + '/queue.json'
+        dir = guild._save_dir + '/queue.json'
 
         with self._lock['{}_serialization'.format(guild._id)]:
             self.bot.log.debug("Serializing queue for %s", guild._id)
@@ -48,16 +48,16 @@ class Player_Cog(ExportableMixin, InjectableMixin, Cog):
             with open(dir, 'w', encoding='utf8') as f:
                 f.write(self.player[guild].serialize(sort_keys=True))
             
-            pl = self.player.get_playlist()
+            pl = self.player[guild].get_playlist()
             if pl:
-                self.serialize_playlist(pl)
+                self.bot.call('serialize_playlist', guild, pl)
 
     @export_func
     def write_current_song(self, guild: SmartGuild, entry, *, dir=None):
         """
         Writes the current song to file
         """
-        dir = self._save_dir + '/current.txt'
+        dir = guild._save_dir + '/current.txt'
 
         with self._lock['{}_current_song'.format(guild._id)]:
             self.bot.log.debug("Writing current song for %s", guild._id)
@@ -68,7 +68,7 @@ class Player_Cog(ExportableMixin, InjectableMixin, Cog):
     @export_func
     async def on_player_play(self, guild, player, entry):
         self.bot.log.debug('Running on_player_play')
-        await self.bot.update_now_playing_status(entry)
+        await self.bot.update_now_playing_status(self.player.values(), entry)
         guild.skip_state.reset()
 
         # This is the one event where its ok to serialize autoplaylist entries
@@ -136,18 +136,18 @@ class Player_Cog(ExportableMixin, InjectableMixin, Cog):
     @export_func
     async def on_player_resume(self, guild, player, entry, **_):
         self.bot.log.debug('Running on_player_resume')
-        await self.bot.update_now_playing_status(entry)
+        await self.bot.update_now_playing_status(self.player.values(), entry)
 
     @export_func
     async def on_player_pause(self, guild, player, entry, **_):
         self.bot.log.debug('Running on_player_pause')
-        await self.bot.update_now_playing_status(entry, True)
+        await self.bot.update_now_playing_status(self.player.values(), entry, True)
         # self.serialize_player(guild)
 
     @export_func
     async def on_player_stop(self, guild, player, **_):
         self.bot.log.debug('Running on_player_stop')
-        await self.bot.update_now_playing_status()
+        await self.bot.update_now_playing_status(self.player.values())
 
     @export_func
     async def on_player_finished_playing(self, guild, player, **_):
@@ -178,24 +178,17 @@ class Player_Cog(ExportableMixin, InjectableMixin, Cog):
             self.bot.log.exception("Player error", exc_info=ex)
 
     def apply_player_hooks(self, player, guild):
-        return player.on('play', partial(self.on_player_play, self, guild)) \
-                    .on('resume', partial(self.on_player_resume, self, guild)) \
-                    .on('pause', partial(self.on_player_pause, self, guild)) \
-                    .on('stop', partial(self.on_player_stop, self, guild)) \
-                    .on('finished-playing', partial(self.on_player_finished_playing, self, guild)) \
-                    .on('entry-added', partial(self.on_player_entry_added, self, guild)) \
-                    .on('error', partial(self.on_player_error, self, guild))  
+        return player.on('play', partial(self.on_player_play, guild)) \
+                    .on('resume', partial(self.on_player_resume, guild)) \
+                    .on('pause', partial(self.on_player_pause, guild)) \
+                    .on('stop', partial(self.on_player_stop, guild)) \
+                    .on('finished-playing', partial(self.on_player_finished_playing, guild)) \
+                    .on('entry-added', partial(self.on_player_entry_added, guild)) \
+                    .on('error', partial(self.on_player_error, guild))  
 
     async def on_guild_voice_update(self, guild, member, before, after):
         if member == self.bot.user:                   
-            if not after.channel:
-                await self.player[guild].voice.set_voice_channel(None)
-                return
-            try:
-                await self.player[guild].voice.set_voice_channel(after.channel)
-            except exceptions.VoiceConnectionError:
-                # same voice channel, probably because we connect to it ourself
-                pass
+            return
 
         if not self.bot.config.auto_pause:
             return
@@ -282,7 +275,7 @@ class Player_Cog(ExportableMixin, InjectableMixin, Cog):
                 playerdata = f.read()
                 self.player[guild] = self.apply_player_hooks(Player.from_json(playerdata, guild), guild)
         except Exception as e:
-            self.bot.log.exception('cannot deserialize queue, using default one')
+            self.bot.log.error('cannot deserialize queue, using default one')
             self.bot.log.debug(e)
             self.player[guild] = self.apply_player_hooks(Player(guild), guild)
 
@@ -339,7 +332,8 @@ class Player_Cog(ExportableMixin, InjectableMixin, Cog):
         guild.on('voice-update', self.on_guild_voice_update)
 
     async def unload_guild(self, guild):
-        await self.player[guild].voice.set_voice_channel(None)
+        if self.player[guild].voice.voice_channel():
+            await self.player[guild].voice.set_voice_channel(None)
 
     @export_func
     def set_playlist(self, guild, playlist):
@@ -357,6 +351,7 @@ class Player_Cog(ExportableMixin, InjectableMixin, Cog):
         
         Forces the bot leave the current voice channel.
         """
+        guild = get_guild(ctx.bot, ctx.guild)
         await self.player[guild].voice.set_voice_channel(None)
         await messagemanager.safe_send_normal(ctx, ctx, "Disconnected from `{0.name}`".format(ctx.guild), expire_in=20)
         return
@@ -369,14 +364,16 @@ class Player_Cog(ExportableMixin, InjectableMixin, Cog):
 
         Call the bot to the summoner's voice channel.
         """
+        guild = get_guild(ctx.bot, ctx.guild)
 
         if not ctx.author.voice:
             raise exceptions.CommandError(ctx.bot.str.get('cmd-summon-novc', 'You are not connected to voice. Try joining a voice channel!'))
 
-        await self.player[guild].set_voice_channel(ctx.author.voice.channel)
-        # TODO: check if autoplay
-
         ctx.bot.log.info("Joining {0.guild.name}/{0.name}".format(ctx.author.voice.channel))
+        
+        await self.player[guild].voice.set_voice_channel(ctx.author.voice.channel)
+        await self.player[guild].play()
+        # TODO: check if autoplay
 
         await messagemanager.safe_send_normal(ctx, ctx, ctx.bot.str.get('cmd-summon-reply', 'Connected to `{0.name}`').format(ctx.author.voice.channel))
 

@@ -120,7 +120,7 @@ class Playlist_Cog(ExportableMixin, InjectableMixin, Cog):
             raise exceptions.CommandError('There is already a playlist with that name.')
         else:
             self.playlists[guild][name] = Playlist(name, bot)
-            await guild.serialize_playlist(self.playlists[guild][name])
+            self.serialize_playlist(guild, self.playlists[guild][name])
             return self.playlists[guild][name]
 
     @inject_as_subcommand('add', name = 'playlist')
@@ -165,7 +165,7 @@ class Playlist_Cog(ExportableMixin, InjectableMixin, Cog):
                 bot.log.debug('{} ({})'.format(e, e.source_url))
                 # @TheerapakG: TODO: make unprocessed from processed
                 await g_pl.add_entry(await get_unprocessed_entry(e.source_url, ctx.author.id, bot.downloader, dict()))
-            await guild.serialize_playlist(g_pl)
+            self.serialize_playlist(guild, g_pl)
 
         await messagemanager.safe_send_normal(ctx, ctx, 'imported entries from playlist: {}'.format(name))    
 
@@ -232,7 +232,7 @@ class Playlist_Cog(ExportableMixin, InjectableMixin, Cog):
 
         pl = self.playlists[guild][name] if name else bot.call('get_playlist', guild)
         await bot.crossmodule.async_call_object('_play', ctx, pl, url, send_reply = False)
-        await guild.serialize_playlist(pl)
+        self.serialize_playlist(guild, pl)
 
         await messagemanager.safe_send_normal(ctx, ctx, 'imported playlist from {} to {}'.format(url, pl._name))
 
@@ -266,7 +266,7 @@ class Playlist_Cog(ExportableMixin, InjectableMixin, Cog):
                     for entry in entry_indexes:
                         pos = await playlist.get_entry_position(entry)
                         await playlist.remove_position(pos)
-                    await guild.serialize_playlist(playlist)
+                    self.serialize_playlist(guild, playlist)
                     entry_text = '%s ' % len(entry_indexes) + 'item'
                     if len(entry_indexes) > 1:
                         entry_text += 's'
@@ -294,7 +294,7 @@ class Playlist_Cog(ExportableMixin, InjectableMixin, Cog):
 
         if permissions.remove or ctx.author.id == playlist[index - 1].queuer_id:
             entry = await playlist.remove_position((index - 1))
-            await guild.serialize_playlist(playlist)
+            self.serialize_playlist(guild, playlist)
             if entry.queuer_id:
                 await messagemanager.safe_send_normal(ctx, ctx, ctx.bot.str.get('cmd-remove-reply-author', "Removed entry `{0}` added by `{1}`").format(entry.title, guild.guild.get_member(entry.queuer_id)).strip())
                 return
@@ -322,7 +322,7 @@ class Playlist_Cog(ExportableMixin, InjectableMixin, Cog):
             playlist = bot.call('get_playlist', guild)
 
         await playlist.clear()
-        await guild.serialize_playlist(playlist)
+        self.serialize_playlist(guild, playlist)
         await messagemanager.safe_send_normal(ctx, ctx, ctx.bot.str.get('cmd-clear-reply', "Cleared `{0}`").format(playlist._name), expire_in=20)
 
     @command()

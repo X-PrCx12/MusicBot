@@ -14,6 +14,7 @@ from ...messagemanager import safe_send_normal
 from ...smart_guild import SmartGuild, get_guild
 from ...ytdldownloader import get_unprocessed_entry, get_stream_entry
 from ...playback import Playlist, Player
+from ...exceptions import PlaybackError
 
 from ...lib.event_emitter import AsyncEventEmitter
 
@@ -36,7 +37,7 @@ class Autoplaylist(ExportableMixin, Cog):
         if self.is_playlist_auto(playlist):
             self.set_auto(guild, None)
     
-    async def prepare_remove_playlist(self, guild: SmartGuild, *_):
+    async def remove_playlist(self, guild: SmartGuild, *_):
         await guild.serialize_to_dir()
 
     def pre_init(self, bot):
@@ -74,7 +75,7 @@ class Autoplaylist(ExportableMixin, Cog):
             self.swap[guild] = None
 
         def _autopause(player):
-            if self._check_if_empty(player._guild._voice_channel):
+            if self.bot._check_if_empty(self.player[guild].voice.voice_channel()):
                 self.log.info("Initial autopause in empty channel")
                 player.pause()
                 self.bot.server_specific_data[guild]['auto_paused'] = True
@@ -100,7 +101,7 @@ class Autoplaylist(ExportableMixin, Cog):
     async def on_player_play(self, guild, player, entry):
         self.bot.log.debug('Running autoplaylist on_player_play')
 
-        if guild.is_currently_auto():
+        if self.is_currently_auto(guild):
             channel = None
             author = None            
             newmsg = 'Now playing automatically added entry `%s` in `%s`' % (
@@ -153,22 +154,22 @@ class Autoplaylist(ExportableMixin, Cog):
 
     @export_func
     def set_playlist(self, guild, playlist, swap = False):
-        if swap and self.is_currently_auto():
+        if swap and self.is_currently_auto(guild):
             with self._lock[guild]:
                 self.swap = playlist
         else:
-            ContinueIteration(guild, playlist)
+            return ContinueIteration(guild, playlist)
 
     @export_func
     def get_playlist(self, guild, incl_auto = False):
         if incl_auto:
-           ContinueIteration(guild)
+           return ContinueIteration(guild)
         else:
             with self._lock[guild]:
                 if self.is_currently_auto(guild):
                     return self.swap[guild]
                 else:
-                    ContinueIteration(guild)
+                    return ContinueIteration(guild)
 
     @export_func
     def is_playlist_auto(self, guild: SmartGuild, pl: Playlist):
@@ -177,26 +178,29 @@ class Autoplaylist(ExportableMixin, Cog):
 
     @export_func
     def is_currently_auto(self, guild: SmartGuild):
-        return self.is_playlist_auto(self.get_playlist(guild, incl_auto = True))
+        return self.is_playlist_auto(guild, self.get_playlist(guild, incl_auto = True))
 
     @export_func
-    def return_from_auto(self, guild, *, also_skip = False):
-        if self.is_currently_auto():
+    async def return_from_auto(self, guild, *, also_skip = False):
+        if self.is_currently_auto(guild):
             self.bot.log.info("Leaving auto in {}".format(guild._id))
             with self._lock[guild]:
+                if also_skip:
+                    try:
+                        await self.player[guild].skip()
+                    except PlaybackError:
+                        pass
                 self.set_playlist(guild, self.swap[guild], swap=False)
             self.bot.call('serialize_playlist', guild, self.ap[guild])
             self.player[guild].random = False
             self.player[guild].pull_persist = False
-            if also_skip:
-                self.player[guild].skip()
 
     @export_func
     def set_auto(self, guild, pl: Optional[Playlist] = None):
         self.bot.log.info("Setting auto in {}".format(guild._id))
         self.bot.call('serialize_playlist', guild, self.ap[guild])
         with self._lock[guild]:
-            if self.is_currently_auto():
+            if self.is_currently_auto(guild):
                 if pl:
                     # set pl as playlist as we are autoing
                     self.set_playlist(guild, pl, swap=False)
@@ -259,7 +263,7 @@ class Autoplaylist(ExportableMixin, Cog):
                 current = await get_unprocessed_entry(url, None, bot.downloader, dict())
             if current.source_url not in [e.source_url for e in guild._auto.list_snapshot()]:
                 await guild._auto.add_entry(current)
-                await guild.serialize_playlist(guild._auto)
+                self.bot.call('serialize_playlist', guild, guild._auto)
                 ctx.bot.log.debug("Appended {} to autoplaylist".format(url))
                 await safe_send_normal(ctx, ctx, bot.str.get('cmd-save-success', 'Added <{0}> to the autoplaylist.').format(url))
             else:

@@ -27,7 +27,7 @@ DEALINGS IN THE SOFTWARE.
 """
 import inspect
 
-from functools import wraps
+from functools import wraps, partial
 from collections import namedtuple
 from discord.ext.commands import check as discord_check
 from discord.ext.commands import Context
@@ -188,23 +188,24 @@ class ExportableMixin(AsyncEventEmitter):
             iteminst = getattr(self, item)
             if isinstance(iteminst, _ExportFunc):
                 iteminst.bot = self.bot
+                r_func = partial(iteminst.func, self)
                 if item in self.bot.crossmodule:
                     n_func = self.bot.crossmodule.get_object(item)
                     if isinstance(self.bot.crossmodule.get_object(item), _RExportFunc):
-                        n_func.add(iteminst.func)
+                        n_func.add(r_func)
                     else:
                         self.log.error('{} is already registered with crossmodule but is not an exported function, skipping'.format(item))
                         continue
                 else:
                     n_func = _RExportFunc()
-                    n_func.add(iteminst.func)
+                    n_func.add(r_func)
                     self.bot.crossmodule.register_object(item, n_func)
-                self.exports[item] = iteminst
+                self.exports[item] = r_func
 
     @on('uninit')
     async def __uninit(self):
         for item, iteminst in self.exports.items():
             n_func = self.bot.crossmodule.get_object(item)
-            n_func.remove(iteminst.func)
+            n_func.remove(iteminst)
             if not n_func:
                 self.bot.crossmodule.unregister_object(item)
