@@ -45,8 +45,11 @@ class LocalEB(BaseEB):
         else:
             _path = [url]
             _path.append(urljoin(d, url) for d in self.bot.config.local_dir)            
-
-        _good_path = [path for path in _path if os.path.exists(path)]
+        
+        try:
+            _good_path = [path for path in _path if os.path.exists(path)]
+        except TypeError:
+            _good_path = []
 
         if _good_path:
             # @TheerapakG: TODO: show ambiguity
