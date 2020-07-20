@@ -522,7 +522,7 @@ class QueueManagement(Cog):
         # TODO: ignore person if they're deaf or take them out of the list or something?
         # Currently is recounted if they vote, deafen, then vote
 
-        num_voice = sum(1 for m in guild._voice_channel.members if not (
+        num_voice = sum(1 for m in player.voice.voice_channel().members if not (
             m.voice.deaf or m.voice.self_deaf or m == ctx.bot.user))
         if num_voice == 0: num_voice = 1 # incase all users are deafened, to avoid divison by zero
 
@@ -540,7 +540,7 @@ class QueueManagement(Cog):
                 ctx,
                 ctx.bot.str.get('cmd-skip-reply-skipped-1', 'Your skip for `{0}` was acknowledged.\nThe vote to skip has been passed.{1}').format(
                     current_entry.title,
-                    ctx.bot.str.get('cmd-skip-reply-skipped-2', ' Next song coming up!') if (((await playlist.get_length()) > 0) or ((await player.status()) != PlayerState.WAITING)) else ''
+                    ctx.bot.str.get('cmd-skip-reply-skipped-2', ' Next song coming up!') if (((await playlist.get_length()) > 0) or (player.status() != PlayerState.WAITING)) else ''
                 ),
                 reply=True,
                 expire_in=20

@@ -42,7 +42,7 @@ class BotManagement(InjectableMixin, Cog):
         Disconnects from voice channels and closes the bot process.
         """
         await messagemanager.safe_send_normal(ctx, ctx, "\N{WAVING HAND SIGN}")
-        
+        ctx.bot._restart = False
         ctx.bot.loop.stop()
 
     @command()

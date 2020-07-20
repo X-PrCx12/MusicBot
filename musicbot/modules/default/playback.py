@@ -93,11 +93,11 @@ class Playback(Cog):
             ensure_future(_fail())
         def success():
             async def _success():
-                await messagemanager.safe_send_normal(ctx, ctx, ctx.bot.str.get('cmd-resume-reply', 'Resumed music in `{0.name}`'.format(guild._voice_channel), expire_in=15))
+                await messagemanager.safe_send_normal(ctx, ctx, ctx.bot.str.get('cmd-resume-reply', 'Resumed music in `{0.name}`'.format(player.voice.voice_channel()), expire_in=15))
             ensure_future(_success())
         def wait():
             async def _wait():
-                await messagemanager.safe_send_normal(ctx, ctx, ctx.bot.str.get('playback?cmd?resume?reply@wait', 'Resumed music in `{0.name}`, waiting for entries to be added').format(guild._voice_channel), expire_in=15)
+                await messagemanager.safe_send_normal(ctx, ctx, ctx.bot.str.get('playback?cmd?resume?reply@wait', 'Resumed music in `{0.name}`, waiting for entries to be added').format(player.voice.voice_channel()), expire_in=15)
             ensure_future(_wait())
         await player.play(play_fail_cb = fail, play_success_cb = success, play_wait_cb = wait)
 
@@ -111,10 +111,10 @@ class Playback(Cog):
         """
         guild = get_guild(ctx.bot, ctx.guild)
         player = self.player[guild]
-        state = await player.status()
+        state = player.status()
         if state != PlayerState.PAUSE:
             await player.pause()
-            await messagemanager.safe_send_normal(ctx, ctx, ctx.bot.str.get('cmd-pause-reply', 'Paused music in `{0.name}`').format(guild._voice_channel))
+            await messagemanager.safe_send_normal(ctx, ctx, ctx.bot.str.get('cmd-pause-reply', 'Paused music in `{0.name}`').format(player.voice.voice_channel()))
 
         else:
             raise exceptions.CommandError(ctx.bot.str.get('cmd-pause-none', 'Player is not playing.'), expire_in=30)

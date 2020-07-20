@@ -507,10 +507,6 @@ def runbot(*botloghdlr, tried_updated = False):
         
         try:
             m.run()
-            if thread: # pywin32 thread that is cleaning up and will raise KeyboardInterrupt
-                log.debug('\nWaiting ...')
-                while True:
-                    pass
             cleanup('RunExit')
         except KeyboardInterrupt:
             cleanup('KeyboardInterrupt')

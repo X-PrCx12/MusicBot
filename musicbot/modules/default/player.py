@@ -464,9 +464,9 @@ class Player_Cog(ExportableMixin, InjectableMixin, Cog):
         if not name:
             player = self.player[guild]
             entry = player.get_current_entry()
-            playlist = bot.call('get_playlist', guild)
+            playlist = ctx.bot.call('get_playlist', guild)
 
-            if (await player.status()) == PlayerState.PLAYING:
+            if player.status() == PlayerState.PLAYING:
                 # TODO: Fix timedelta garbage with util function
                 song_progress = ftimedelta(timedelta(seconds=await player.progress()))
                 song_total = ftimedelta(timedelta(seconds=entry.duration))
