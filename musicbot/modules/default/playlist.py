@@ -112,6 +112,7 @@ class Playlist_Cog(ExportableMixin, InjectableMixin, Cog):
             ]
         )
 
+    @export_func
     async def add_pl(self, ctx, name):
         bot = ctx.bot
         guild = get_guild(bot, ctx.guild)
@@ -194,30 +195,6 @@ class Playlist_Cog(ExportableMixin, InjectableMixin, Cog):
 
         await self.playlist_event.emit('remove-playlist', guild, name)
         await messagemanager.safe_send_normal(ctx, ctx, 'removed playlist: {}'.format(name))
-
-    @command()
-    async def swap(self, ctx, name):
-        """
-        Usage:
-            {command_prefix}swap name
-
-        Swap currently playing playlist.
-        """
-        bot = ctx.bot
-        guild = get_guild(bot, ctx.guild)
-        prev = bot.call('get_playlist', guild)
-
-        if name in self.playlists[guild]:
-            pl = self.playlists[guild][name]
-            if pl is guild._auto:
-                raise exceptions.CommandError('This playlist is not swapable (is autoplaylist).')
-            else:
-                await guild.set_playlist(pl)
-                await guild.serialize_to_file()
-        else:
-            raise exceptions.CommandError('There is not any playlist with that name.')
-
-        await messagemanager.safe_send_normal(ctx, ctx, 'swapped playlist from {} to {}'.format(prev._name, name))
 
     @inject_as_subcommand('add entries', name = 'url', after = 'inject_add_entries')
     async def addentriesurl(self, ctx, url, name = None):

@@ -278,6 +278,7 @@ class Player_Cog(ExportableMixin, InjectableMixin, Cog):
             self.bot.log.error('cannot deserialize queue, using default one')
             self.bot.log.debug(e)
             self.player[guild] = self.apply_player_hooks(Player(guild), guild)
+            asyncio.ensure_future(self.bot.async_call('add_pl', ctx, 'default'))
 
         channel = None
 
@@ -377,6 +378,27 @@ class Player_Cog(ExportableMixin, InjectableMixin, Cog):
 
         await messagemanager.safe_send_normal(ctx, ctx, ctx.bot.str.get('cmd-summon-reply', 'Connected to `{0.name}`').format(ctx.author.voice.channel))
 
+    @command()
+    async def swap(self, ctx, name):
+        """
+        Usage:
+            {command_prefix}swap name
+
+        Swap currently playing playlist.
+        """
+        # @TheerapakG: TODO: override if auto
+        bot = ctx.bot
+        guild = get_guild(bot, ctx.guild)
+        prev = self.get_playlist(guild)
+
+        if name in self.playlists[guild]:
+            pl = self.playlists[guild][name]
+            self.player[guild].set_playlist(pl)
+            await guild.serialize_to_dir()
+        else:
+            raise exceptions.CommandError('There is not any playlist with that name.')
+
+        await messagemanager.safe_send_normal(ctx, ctx, 'swapped playlist from {} to {}'.format(prev._name, name))
 
     @command()
     async def np(self, ctx):
