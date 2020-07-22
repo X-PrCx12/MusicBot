@@ -113,10 +113,7 @@ class Playlist_Cog(ExportableMixin, InjectableMixin, Cog):
         )
 
     @export_func
-    async def add_pl(self, ctx, name):
-        bot = ctx.bot
-        guild = get_guild(bot, ctx.guild)
-
+    async def add_pl(self, bot, guild, name):
         if name in self.playlists[guild]:
             raise exceptions.CommandError('There is already a playlist with that name.')
         else:
@@ -133,7 +130,10 @@ class Playlist_Cog(ExportableMixin, InjectableMixin, Cog):
 
         Add a playlist.
         """
-        await self.add_pl(ctx, name)
+        bot = ctx.bot
+        guild = get_guild(bot, ctx.guild)
+
+        await self.add_pl(bot, guild, name)
         await messagemanager.safe_send_normal(ctx, ctx, 'added playlist: {}'.format(name))
         
 

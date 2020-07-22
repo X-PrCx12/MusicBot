@@ -275,10 +275,15 @@ class Player_Cog(ExportableMixin, InjectableMixin, Cog):
                 playerdata = f.read()
                 self.player[guild] = self.apply_player_hooks(Player.from_json(playerdata, guild), guild)
         except Exception as e:
-            self.bot.log.error('cannot deserialize queue, using default one')
+            self.bot.log.error('cannot deserialize queue for guild {}, using default one'.format(guild.id))
             self.bot.log.debug(e)
             self.player[guild] = self.apply_player_hooks(Player(guild), guild)
-            asyncio.ensure_future(self.bot.async_call('add_pl', ctx, 'default'))
+            async def add_default_playlist():
+                self.bot.log.info('setting default playlist for guild {}'.format(guild.id))
+                pl = await self.bot.async_call('add_pl', self.bot, guild, 'default')
+                self.player[guild].set_playlist(pl)
+                await guild.serialize_to_dir()
+            asyncio.ensure_future(add_default_playlist())
 
         channel = None
 
